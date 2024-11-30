@@ -17,6 +17,8 @@
 mydata/
 data/
 
+data/mysql/*
+
 # misc
 .DS_Store
 .env.local
