@@ -1,29 +1,35 @@
-@Library('Shared')_
 pipeline{
-    agent { label 'dev-server'}
-    
+
+    agent any
+
     stages{
-        stage("Code clone"){
+
+        stage("Code"){
             steps{
-                sh "whoami"
-            clone("https://github.com/LondheShubham153/django-notes-app.git","main")
+              echo "cloning....."
+              git url : "https://github.com/VarshaRajS/web-application-deployment-using-nginx.git", branch : "main"
             }
         }
-        stage("Code Build"){
+        stage("Build"){
             steps{
-            dockerbuild("notes-app","latest")
+              echo "building....."
+              sh "docker build -t my-app ."
             }
         }
         stage("Push to DockerHub"){
             steps{
-                dockerpush("dockerHubCreds","notes-app","latest")
+                withCredentials([usernamePassword("credentialsId":"dockerHub", usernameVariable : "dockerHubUser", passwordVariable : "dockerHubPass")]){
+                  sh "docker tag my-app ${env.dockerHubUser}/my-app:latest"
+                  sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
+                  sh "docker push ${env.dockerHubUser}/my-app:latest"
+                }
             }
         }
         stage("Deploy"){
             steps{
-                deploy()
+                echo "This is deploying the code........"
+                sh "docker-compose down && docker-compose up"
             }
         }
-        
     }
 }
